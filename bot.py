@@ -133,6 +133,12 @@ def fetch_reels():
         html = driver.page_source
         log(f"📥 HTML: {len(html)} символов")
 
+        # Дебаг: показать контексты слова reel
+        reel_positions = [m.start() for m in re.finditer(r'reel', html, re.IGNORECASE)]
+        for i, pos in enumerate(reel_positions[:5]):
+            context = html[max(0, pos-30):pos+80]
+            log(f"🔍 reel контекст #{i+1}: ...{context}...")
+
         urls = set()
 
         # Паттерн 1: /reel/ID
