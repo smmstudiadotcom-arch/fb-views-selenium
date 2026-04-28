@@ -81,8 +81,8 @@ def create_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=414,896")
-    options.add_argument("--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
     chrome_bin = os.environ.get("CHROME_BIN", "/usr/bin/chromium")
     chromedriver_path = os.environ.get("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
@@ -95,7 +95,7 @@ def create_driver():
     return driver
 
 def set_cookies(driver):
-    driver.get("https://m.facebook.com/")
+    driver.get("https://www.facebook.com/")
     time.sleep(2)
 
     cookies = [
@@ -119,10 +119,10 @@ def fetch_reels():
         driver = create_driver()
         set_cookies(driver)
 
-        reels_url = f"https://m.facebook.com/profile.php?id={FB_PAGE_ID}&sk=reels"
-        log(f"🔄 Открываю: {reels_url}")
+        reels_url = f"https://www.facebook.com/{FB_PAGE_ID}/reels"
+        log(f"🔄 Открываю (desktop): {reels_url}")
         driver.get(reels_url)
-        time.sleep(8)
+        time.sleep(10)
 
         # Закрываем cookie banner / попапы если есть
         try:
@@ -146,14 +146,13 @@ def fetch_reels():
         try:
             from selenium.webdriver.common.by import By
             
-            # Пробуем несколько селекторов
+            # Пробуем селекторы для desktop версии
             selectors = [
-                '[data-testid="story-photo"]',
-                'div[role="button"]',
-                'a[href*="reel"]',
-                'a[href*="video"]',
-                'video',
-                '[data-mcomponent="MVideo"]',
+                'a[href*="/reel/"]',
+                'a[aria-label*="Reel"]',
+                'div[role="link"]',
+                'a[href*="/videos/"]',
+                '[data-pagelet*="ProfileTilesFeed"]  a',
             ]
             
             video_elements = []
