@@ -134,9 +134,36 @@ def fetch_reels():
         try:
             from selenium.webdriver.common.by import By
             
-            # Находим все элементы с video/reel контентом
-            video_elements = driver.find_elements(By.CSS_SELECTOR, '[data-testid="story-photo"]')
-            log(f"🔍 Найдено video элементов: {len(video_elements)}")
+            # Пробуем несколько селекторов
+            selectors = [
+                '[data-testid="story-photo"]',
+                'div[role="button"]',
+                'a[href*="reel"]',
+                'a[href*="video"]',
+                'video',
+                '[data-mcomponent="MVideo"]',
+            ]
+            
+            video_elements = []
+            for selector in selectors:
+                try:
+                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    if elements:
+                        log(f"🔍 Селектор '{selector}': {len(elements)} элементов")
+                        video_elements = elements
+                        break
+                except:
+                    continue
+            
+            if not video_elements:
+                log(f"⚠️  Ни один селектор не нашёл элементов")
+                # Дебаг: сохраним HTML
+                html = driver.page_source
+                log(f"📄 HTML размер: {len(html)}, сохраняю первые 1000 символов...")
+                log(f"HTML: {html[:1000]}")
+                return []
+
+            log(f"🔍 Всего найдено: {len(video_elements)}")
 
             for i, elem in enumerate(video_elements[:10]):  # Проверяем первые 10
                 try:
