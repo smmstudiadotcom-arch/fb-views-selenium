@@ -127,80 +127,48 @@ def fetch_reels():
         # Скроллим чтобы подгрузить контент
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(3)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(3)
 
-        html = driver.page_source
-        log(f"📥 HTML: {len(html)} символов")
-
-        # Дебаг: ищем video ID разными способами
-        # 1. data-store с video info
-        data_stores = re.findall(r'data-store="([^"]*video[^"]*)"', html, re.IGNORECASE)
-        log(f"🔍 data-store с video: {data_stores[:3]}")
-
-        # 2. data-uri или data-href
-        data_uris = re.findall(r'data-(?:uri|href|url|src)="([^"]*)"', html)
-        video_uris = [u for u in data_uris if 'video' in u.lower() or 'reel' in u.lower() or 'watch' in u.lower()]
-        log(f"🔍 data-uri/href с video: {video_uris[:5]}")
-
-        # 3. story-photo блоки — ищем data-store рядом
-        story_blocks = re.findall(r'data-store="([^"]*)"[^>]*data-testid="story-photo', html)
-        log(f"🔍 story-photo data-store: {story_blocks[:3]}")
-
-        # 4. Ищем все числовые ID в data-store
-        all_data_stores = re.findall(r'data-store="([^"]*)"', html)
-        log(f"🔍 Всего data-store: {len(all_data_stores)}")
-        for ds in all_data_stores[:5]:
-            log(f"   → {ds[:150]}")
-
-        # 5. Ищем в onclick обработчиках
-        onclicks = re.findall(r'onclick="([^"]*video[^"]*)"', html, re.IGNORECASE)
-        log(f"🔍 onclick с video: {onclicks[:3]}")
-
-        # 6. Ищем JSON в script тегах с video_id
-        scripts = re.findall(r'<script[^>]*>([^<]*video_id[^<]*)</script>', html, re.IGNORECASE)
-        for s in scripts[:2]:
-            ids = re.findall(r'"video_id"\s*:\s*"?(\d{10,})"?', s)
-            log(f"🔍 script video_ids: {ids[:5]}")
-
-        # 7. Ищем все href вообще (первые 10)
-        all_hrefs = re.findall(r'href="(/[^"]{10,})"', html)
-        log(f"🔍 Все href ({len(all_hrefs)}), первые 5:")
-        for h in all_hrefs[:5]:
-            log(f"   → {h}")
-
+        # Ищем все video элементы и кликаем на них
         urls = set()
+        
+        try:
+            from selenium.webdriver.common.by import By
+            
+            # Находим все элементы с video/reel контентом
+            video_elements = driver.find_elements(By.CSS_SELECTOR, '[data-testid="story-photo"]')
+            log(f"🔍 Найдено video элементов: {len(video_elements)}")
 
-        urls = set()
+            for i, elem in enumerate(video_elements[:10]):  # Проверяем первые 10
+                try:
+                    # Кликаем на элемент
+                    driver.execute_script("arguments[0].scrollIntoView();", elem)
+                    time.sleep(1)
+                    elem.click()
+                    time.sleep(2)
 
-        # Паттерн 1: /reel/ID
-        for match in re.finditer(r'/reel/(\d{10,})', html):
-            urls.add(f"https://www.facebook.com/reel/{match.group(1)}")
+                    # Получаем URL из адресной строки
+                    current_url = driver.current_url
+                    log(f"🔍 Клик #{i+1}: {current_url}")
 
-        # Паттерн 2: video_id
-        for match in re.finditer(r'"video_id":"(\d{10,})"', html):
-            urls.add(f"https://www.facebook.com/reel/{match.group(1)}")
+                    # Проверяем что это видео/reel
+                    if '/reel/' in current_url or '/video' in current_url or '/watch' in current_url:
+                        urls.add(current_url)
+                        log(f"✅ Reel #{i+1}: {current_url}")
 
-        # Паттерн 3: /videos/ID
-        for match in re.finditer(r'/videos/(\d{10,})', html):
-            urls.add(f"https://www.facebook.com/reel/{match.group(1)}")
+                    # Возвращаемся назад
+                    driver.back()
+                    time.sleep(2)
 
-        # Паттерн 4: watch/?v=ID
-        for match in re.finditer(r'watch/\?v=(\d{10,})', html):
-            urls.add(f"https://www.facebook.com/reel/{match.group(1)}")
+                except Exception as e:
+                    log(f"⚠️  Элемент #{i+1} ошибка: {e}")
+                    continue
 
-        # Паттерн 5: href с reel
-        for match in re.finditer(r'href="[^"]*reel[^"]*?(\d{10,})', html):
-            urls.add(f"https://www.facebook.com/reel/{match.group(1)}")
+        except Exception as e:
+            log(f"❌ Ошибка поиска элементов: {e}")
 
-        # Дебаг
-        reel_count = len(re.findall(r'reel', html, re.IGNORECASE))
-        video_count = len(re.findall(r'video', html, re.IGNORECASE))
-        log(f"🔍 Слово 'reel' в HTML: {reel_count}, 'video': {video_count}")
         log(f"🎬 Найдено Reels: {len(urls)}")
-
         if urls:
-            for u in list(urls)[:3]:
+            for u in list(urls)[:5]:
                 log(f"   → {u}")
 
         return list(urls)
