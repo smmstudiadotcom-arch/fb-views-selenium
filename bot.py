@@ -25,9 +25,9 @@ CHECK_INTERVAL = 3600  # каждый час
 
 # Cookies
 C_USER = os.environ.get("FB_C_USER", "61553351803414")
-XS     = os.environ.get("FB_XS",     "8%3AeGYkn8717BMe-g%3A2%3A1774503965%3A-1%3A-1%3A%3AAcw0XpXFaM1nyL4JOlFdYs_Ud6Y079Nz9FGx2eBrLs8")
+XS     = os.environ.get("FB_XS",     "23%3AUcW9QDH7Lw4OMA%3A2%3A1777366320%3A-1%3A-1%3A%3AAcxV4doD641eN1HEAQNfnkX0cE357pxRh9ixF-wCuA")
 DATR   = os.environ.get("FB_DATR",   "gvGqaR00HB8BBQCtWvA_ZrBw")
-FR     = os.environ.get("FB_FR",     "1fXp7RjNu6E4tlLeA.AWc5dZieQn71hppDlUvFZLqzKA5QYrGNQzKXlgvHvbeVm7zLhgs.Bp6coy..AAA.0.0.Bp6coy.AWeEM5yj4-p0pnZr32HrLye4l9I")
+FR     = os.environ.get("FB_FR",     "1BiHkrekV5y5wC9M4.AWcjA0M_D1BFpG4ArVdD9DEHJz1hf_Cp4e633bJFekyBL_WG64E.Bp8HUz..AAA.0.0.Bp8HUz.AWd2xaqh1GaCzn5odyasmAo3ovQ")
 SB     = os.environ.get("FB_SB",     "hfGqaZIWmBX2PQV9iqh9Tr1V")
 
 STATE_FILE = "processed_reels.txt"
