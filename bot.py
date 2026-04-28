@@ -133,11 +133,25 @@ def fetch_reels():
         html = driver.page_source
         log(f"📥 HTML: {len(html)} символов")
 
-        # Дебаг: показать контексты слова reel
-        reel_positions = [m.start() for m in re.finditer(r'reel', html, re.IGNORECASE)]
-        for i, pos in enumerate(reel_positions[:5]):
-            context = html[max(0, pos-30):pos+80]
-            log(f"🔍 reel контекст #{i+1}: ...{context}...")
+        # Дебаг: ищем href рядом с MVideo и story-photo
+        mvideo_contexts = re.findall(r'href="([^"]{20,})"[^>]*data-mcomponent="MVideo"', html)
+        log(f"🔍 MVideo href: {mvideo_contexts[:5]}")
+
+        # Ищем все href с story_fbid или video
+        story_hrefs = re.findall(r'href="([^"]*(?:story_fbid|video|reel|watch)[^"]*)"', html, re.IGNORECASE)
+        log(f"🔍 story/video/reel hrefs: {story_hrefs[:5]}")
+
+        # Ищем все data-testid="story-photo" с href перед ними
+        story_photos = re.findall(r'href="([^"]+)"[^>]*data-testid="story-photo', html)
+        log(f"🔍 story-photo hrefs: {story_photos[:5]}")
+
+        # Более широкий поиск: любой href в блоках с MVideo
+        mvideo_blocks = re.findall(r'href="(/[^"]+)"[^>]*?(?:data-mcomponent="MVideo"|data-testid="story-photo)', html)
+        log(f"🔍 MVideo block hrefs: {mvideo_blocks[:5]}")
+
+        # Ищем полные URL с /100081997113052/ и видео
+        page_links = re.findall(r'href="([^"]*100081997113052[^"]*)"', html)
+        log(f"🔍 Page links: {page_links[:10]}")
 
         urls = set()
 
