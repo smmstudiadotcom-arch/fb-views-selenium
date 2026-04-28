@@ -124,6 +124,18 @@ def fetch_reels():
         driver.get(reels_url)
         time.sleep(8)
 
+        # Закрываем cookie banner / попапы если есть
+        try:
+            close_buttons = driver.find_elements(By.CSS_SELECTOR, '[aria-label*="Close"], [aria-label*="Закрыть"], button[data-cookiebanner="accept_button"]')
+            for btn in close_buttons[:3]:
+                try:
+                    btn.click()
+                    time.sleep(1)
+                except:
+                    pass
+        except:
+            pass
+
         # Скроллим чтобы подгрузить контент
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(3)
@@ -167,11 +179,13 @@ def fetch_reels():
 
             for i, elem in enumerate(video_elements[:10]):  # Проверяем первые 10
                 try:
-                    # Кликаем на элемент
+                    # Скроллим к элементу
                     driver.execute_script("arguments[0].scrollIntoView();", elem)
                     time.sleep(1)
-                    elem.click()
-                    time.sleep(2)
+                    
+                    # Используем JavaScript клик (обходит перекрытия)
+                    driver.execute_script("arguments[0].click();", elem)
+                    time.sleep(3)
 
                     # Получаем URL из адресной строки
                     current_url = driver.current_url
@@ -188,6 +202,12 @@ def fetch_reels():
 
                 except Exception as e:
                     log(f"⚠️  Элемент #{i+1} ошибка: {e}")
+                    # Пробуем вернуться назад если застряли
+                    try:
+                        driver.back()
+                        time.sleep(1)
+                    except:
+                        pass
                     continue
 
         except Exception as e:
