@@ -133,25 +133,43 @@ def fetch_reels():
         html = driver.page_source
         log(f"📥 HTML: {len(html)} символов")
 
-        # Дебаг: ищем href рядом с MVideo и story-photo
-        mvideo_contexts = re.findall(r'href="([^"]{20,})"[^>]*data-mcomponent="MVideo"', html)
-        log(f"🔍 MVideo href: {mvideo_contexts[:5]}")
+        # Дебаг: ищем video ID разными способами
+        # 1. data-store с video info
+        data_stores = re.findall(r'data-store="([^"]*video[^"]*)"', html, re.IGNORECASE)
+        log(f"🔍 data-store с video: {data_stores[:3]}")
 
-        # Ищем все href с story_fbid или video
-        story_hrefs = re.findall(r'href="([^"]*(?:story_fbid|video|reel|watch)[^"]*)"', html, re.IGNORECASE)
-        log(f"🔍 story/video/reel hrefs: {story_hrefs[:5]}")
+        # 2. data-uri или data-href
+        data_uris = re.findall(r'data-(?:uri|href|url|src)="([^"]*)"', html)
+        video_uris = [u for u in data_uris if 'video' in u.lower() or 'reel' in u.lower() or 'watch' in u.lower()]
+        log(f"🔍 data-uri/href с video: {video_uris[:5]}")
 
-        # Ищем все data-testid="story-photo" с href перед ними
-        story_photos = re.findall(r'href="([^"]+)"[^>]*data-testid="story-photo', html)
-        log(f"🔍 story-photo hrefs: {story_photos[:5]}")
+        # 3. story-photo блоки — ищем data-store рядом
+        story_blocks = re.findall(r'data-store="([^"]*)"[^>]*data-testid="story-photo', html)
+        log(f"🔍 story-photo data-store: {story_blocks[:3]}")
 
-        # Более широкий поиск: любой href в блоках с MVideo
-        mvideo_blocks = re.findall(r'href="(/[^"]+)"[^>]*?(?:data-mcomponent="MVideo"|data-testid="story-photo)', html)
-        log(f"🔍 MVideo block hrefs: {mvideo_blocks[:5]}")
+        # 4. Ищем все числовые ID в data-store
+        all_data_stores = re.findall(r'data-store="([^"]*)"', html)
+        log(f"🔍 Всего data-store: {len(all_data_stores)}")
+        for ds in all_data_stores[:5]:
+            log(f"   → {ds[:150]}")
 
-        # Ищем полные URL с /100081997113052/ и видео
-        page_links = re.findall(r'href="([^"]*100081997113052[^"]*)"', html)
-        log(f"🔍 Page links: {page_links[:10]}")
+        # 5. Ищем в onclick обработчиках
+        onclicks = re.findall(r'onclick="([^"]*video[^"]*)"', html, re.IGNORECASE)
+        log(f"🔍 onclick с video: {onclicks[:3]}")
+
+        # 6. Ищем JSON в script тегах с video_id
+        scripts = re.findall(r'<script[^>]*>([^<]*video_id[^<]*)</script>', html, re.IGNORECASE)
+        for s in scripts[:2]:
+            ids = re.findall(r'"video_id"\s*:\s*"?(\d{10,})"?', s)
+            log(f"🔍 script video_ids: {ids[:5]}")
+
+        # 7. Ищем все href вообще (первые 10)
+        all_hrefs = re.findall(r'href="(/[^"]{10,})"', html)
+        log(f"🔍 Все href ({len(all_hrefs)}), первые 5:")
+        for h in all_hrefs[:5]:
+            log(f"   → {h}")
+
+        urls = set()
 
         urls = set()
 
